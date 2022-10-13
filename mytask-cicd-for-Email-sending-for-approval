@@ -1,0 +1,40 @@
+node
+{
+    def jobName = currentBuild.fullDisplayName
+    def mailToRecipients = 'jenkinstest2241@gmail.com'
+    def useremail = 'sumanmadan41@gmail.com'
+    stage('send mail')
+    {
+        echo "waiting for conformation"
+    }
+    stage('approval')
+    {
+        def userAborted = false
+        emailext body: '''
+        Please go to counsole output of ${BUILD_URL}input to approve or Reject.<br>
+        ''',
+        mimeType: 'text/html',
+        subject: "[Jenkins] ${jobName} Build Approval Request",
+        from: "${useremail}",
+        to: "${mailToRecipients}",
+        recipientProviders: [[$class: 'CulpritsRecipientProvider']]
+        
+        try {
+          userInput = input submitter: 'suman' , message: 'Do you approve?'
+    } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
+      cause = e.caused.get(0)
+      echo "Aborted by " + caused.getUser().toString()
+            userAborted = true
+         echo " System Aborted, but looks like timeout period didn't complete, Aborting." 
+    }
+    if (userAborted) {
+        currentBuild.result = 'ABORTED'
+    } else {
+        echo "testing"
+    }
+    }
+    stage('Deploy')
+    {
+        echo "Deploy"
+    }
+}
